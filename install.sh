@@ -3,13 +3,13 @@
 set -euo pipefail
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
-echo '=== [1/3] Install dsh-review ==='
+echo '=== [1/4] Install dsh-review ==='
 dsh plugin --profile web add "$ROOT/packages/dsh-review"
 
-echo '=== [2/3] Install dsh-review-changes ==='
+echo '=== [2/4] Install dsh-review-changes ==='
 dsh plugin --profile web add "$ROOT/packages/dsh-review-changes"
 
-echo '=== [3/3] Install VSCode extension ==='
+echo '=== [3/4] Install VSCode extension ==='
 VSIX="$ROOT/vscode_dsh_plugin/dsh-review-vscode-0.1.0.vsix"
 if [ -f "$VSIX" ]; then
   code --install-extension "$VSIX" --force
@@ -24,6 +24,10 @@ else
         "$DEST/"
 fi
 
+echo '=== [4/4] Enable per-hunk Accept/Reject (VS Code proposed API) ==='
+node "$ROOT/vscode_dsh_plugin/lib/proposed-api.js"
+
 echo '=== Done ==='
 echo '1. Restart dsh web.'
-echo '2. In VSCode run Developer: Reload Window.'
+echo '2. FULLY quit VS Code (Cmd+Q / Alt+F4), then reopen — Reload Window is not enough.'
+echo '   Per-hunk Accept/Reject needs editorInsets via argv.json enable-proposed-api.'

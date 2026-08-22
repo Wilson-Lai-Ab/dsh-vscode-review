@@ -104,6 +104,10 @@
           "light": "media/dsh-refresh-proxy.svg",
           "dark": "media/dsh-refresh-proxy.svg"
         }
+      },
+      {
+        "command": "dshReview.enableProposedApi",
+        "title": "dsh review: Enable per-hunk Accept/Reject (proposed API)"
       }
     ],
     "configuration": {

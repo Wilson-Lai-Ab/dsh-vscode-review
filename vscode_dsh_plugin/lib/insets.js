@@ -168,7 +168,14 @@ class InsetManager {
       } catch (err) {
         // Transient failure (editor closing, etc.) — skip the hunk but keep
         // support so the next refresh can retry; note it for diagnostics.
+        // Proposed-API denial is permanent for this window: flip supported off
+        // so we stop retrying and surface the argv.json fix.
         this.diagnostic = 'create-failed: ' + (err && err.message ? err.message : String(err))
+        const msg = String(err && err.message || err || '')
+        if (/proposed api|enable-proposed-api/i.test(msg)) {
+          this.supported = false
+          if (this.handlers.onProposedApiDenied) this.handlers.onProposedApiDenied(err)
+        }
         continue
       }
       inset.webview.html = renderHunkHtml(removedLines, pos + 1, ordered.length)

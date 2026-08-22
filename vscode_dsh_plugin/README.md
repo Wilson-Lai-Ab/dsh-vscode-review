@@ -1,6 +1,26 @@
 # dsh-review-vscode
 
-**dsh review 的 VS Code 扩展**：当 dsh 插件记下一次 AI 的 write/edit 时，**自动在当前 VS Code 里弹出该改动的『行内 diff』**（inline，不是左右并排），并提供一条命令撤回。全程不依赖 git。
+**dsh review 的 VS Code 扩展**：当 dsh 插件记下一次 AI 的 write/edit 时，**自动在当前 VS Code 里弹出该改动的『行内 diff』**（inline，不是左右并排），每个 hunk 可逐段 Accept / Reject，并提供一条命令撤回。全程不依赖 git。
+
+## 逐段 Accept / Reject（必做）
+
+行级按钮依赖 VS Code proposed API `editorInsets`。**扩展开发窗口会自动放行**；正式安装的 VSIX **默认禁止**，只会留下绿色高亮和文件级「全部接受 / 全部撤回」。
+
+安装脚本会写入 `argv.json`。手动安装后请执行：
+
+```sh
+node lib/proposed-api.js
+```
+
+或命令面板：`dsh review: Enable per-hunk Accept/Reject (proposed API)`。
+
+等价于在 `~/.vscode/argv.json`（Windows：`%APPDATA%\Code\argv.json`）加入：
+
+```json
+"enable-proposed-api": ["dsn.dsh-review-vscode"]
+```
+
+然后 **完全退出 VS Code 再打开**（`Cmd+Q` / `Alt+F4`）。`Developer: Reload Window` 不够。
 
 ## 它做什么
 
@@ -41,7 +61,10 @@ code --extensionDevelopmentPath=$PWD
 ```sh
 npm i -g @vscode/vsce && vsce package
 code --install-extension dsh-review-vscode-0.1.0.vsix
+node lib/proposed-api.js
 ```
+
+装完后必须完全退出再开 VS Code，行级按钮才会出现。
 
 ## 配置
 

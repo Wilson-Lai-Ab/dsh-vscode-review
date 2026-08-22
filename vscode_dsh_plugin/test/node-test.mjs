@@ -135,6 +135,38 @@ console.log('\n[5] resolveStoreDir')
   check('empty -> default', journal.resolveStoreDir('') === journal.defaultStoreDir())
 }
 
+console.log('\n[6] proposed-api argv.json merge')
+{
+  const api = require('../lib/proposed-api.js')
+  const id = api.EXTENSION_ID
+  const empty = api.mergeArgvJson('', id)
+  check('empty creates argv', empty.changed && empty.text.includes('"' + id + '"'))
+  const already = api.mergeArgvJson(empty.text, id)
+  check('idempotent when already present', already.changed === false)
+  const listed = api.argvListsExtension(empty.text, id)
+  check('argvListsExtension true', listed === true)
+  check('argvListsExtension false', api.argvListsExtension('{}', id) === false)
+
+  const withComments = `{
+	// keep this comment
+	"disable-color-correct-rendering": true,
+	"crash-reporter-id": "abc"
+}
+`
+  const inserted = api.mergeArgvJson(withComments, id)
+  check('preserves comments', inserted.text.includes('keep this comment'))
+  check('inserts key before closing brace', inserted.changed && inserted.text.includes('"enable-proposed-api"'))
+  check('valid-ish jsonc still has crash-reporter-id', inserted.text.includes('"crash-reporter-id"'))
+  check('does not duplicate after second merge', api.mergeArgvJson(inserted.text, id).changed === false)
+
+  const withArray = `{
+	"enable-proposed-api": ["other.ext"]
+}
+`
+  const appended = api.mergeArgvJson(withArray, id)
+  check('appends to existing array', appended.changed && appended.text.includes('"other.ext"') && appended.text.includes('"' + id + '"'))
+}
+
 rmSync(updFile, { force: true })
 rmSync(creFile, { force: true })
 rmSync(store, { recursive: true, force: true })

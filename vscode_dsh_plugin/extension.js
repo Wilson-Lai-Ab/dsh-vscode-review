@@ -39,6 +39,7 @@ const {
 } = require('./lib/actions.js')
 const { sendTextToDsh, sendRefsToDsh, setupDshBrowser } = require('./lib/browser.js')
 const { isDshOwnerWindow, startOwnerHeartbeat, stopOwnerHeartbeat } = require('./lib/owner.js')
+const proposedApi = require('./lib/proposed-api.js')
 
 /** QuickPick of pending files (store-backed; open renders inline UI). */
 async function listPending() {
@@ -195,6 +196,75 @@ async function stopDsh() {
   setTimeout(() => { reloadDshWebview(true) }, 600)
 }
 
+function proposedApiConfigured() {
+  const seen = new Set()
+  for (const p of [proposedApi.primaryArgvPath(), ...proposedApi.argvJsonPaths()]) {
+    if (seen.has(p)) continue
+    seen.add(p)
+    try {
+      if (proposedApi.argvListsExtension(fs.readFileSync(p, 'utf8'), proposedApi.EXTENSION_ID)) return true
+    } catch { /* missing file */ }
+  }
+  return false
+}
+
+let proposedApiNagShown = false
+async function enableProposedApi() {
+  try {
+    const results = proposedApi.enableInKnownArgvFiles()
+    log('enableProposedApi:', JSON.stringify(results))
+    const ok = results.some((r) => r.status === 'created' || r.status === 'updated' || r.status === 'already')
+    if (!ok) {
+      const err = results.find((r) => r.status === 'error')
+      vscode.window.showErrorMessage('dsh review: could not write argv.json' + (err && err.error ? ': ' + err.error : ''))
+      return
+    }
+    const choice = await vscode.window.showInformationMessage(
+      'dsh review: per-hunk Accept/Reject is enabled in argv.json. Fully quit VS Code (Cmd+Q / Alt+F4), not Reload Window, then reopen.',
+      'Quit VS Code'
+    )
+    if (choice === 'Quit VS Code') {
+      await vscode.commands.executeCommand('workbench.action.quit')
+    }
+  } catch (e) {
+    log('enableProposedApi ERROR:', e && e.message || e)
+    vscode.window.showErrorMessage('dsh review: failed to write argv.json: ' + (e && e.message || e))
+  }
+}
+
+function warnPerHunkUnavailable(reason) {
+  if (proposedApiNagShown) return
+  proposedApiNagShown = true
+  log('per-hunk UI unavailable:', reason || '')
+  if (proposedApiConfigured()) {
+    vscode.window.showWarningMessage(
+      'dsh review: per-hunk Accept/Reject still blocked. argv.json is set — fully quit VS Code (Cmd+Q / Alt+F4) and reopen. Reload Window is not enough.',
+      'Quit VS Code'
+    ).then((choice) => {
+      if (choice === 'Quit VS Code') vscode.commands.executeCommand('workbench.action.quit')
+    })
+    return
+  }
+  vscode.window.showWarningMessage(
+    'dsh review: per-hunk Accept/Reject is off. Stable VS Code blocks editorInsets unless argv.json lists dsn.dsh-review-vscode. File-level Accept All still works.',
+    'Enable now'
+  ).then((choice) => {
+    if (choice === 'Enable now') enableProposedApi()
+  })
+}
+
+function maybeWarnProposedApi(context) {
+  if (context.extensionMode === vscode.ExtensionMode.Development) {
+    log('extension development host: proposed API is allowed without argv.json')
+    return
+  }
+  if (proposedApiConfigured()) {
+    log('argv.json already lists', proposedApi.EXTENSION_ID)
+    return
+  }
+  warnPerHunkUnavailable('argv.json missing enable-proposed-api')
+}
+
 function activate(context) {
   state.output = vscode.window.createOutputChannel('dsh review')
   const storeDir = resolveStoreDir(vscode.workspace.getConfiguration('dshReview').get('storeDir') || '')
@@ -206,6 +276,7 @@ function activate(context) {
     onUndo: (st) => undoLast(st, 'inset'),
     onAcceptAll: async (st) => { try { log('onAcceptAll called'); await batchAcceptAll(st) } catch (e) { log('batchAcceptAll ERROR:', e.message, e.stack) } },
     onRevertAll: async (st) => { try { log('onRevertAll called'); await batchRejectAll(st) } catch (e) { log('batchRejectAll ERROR:', e.message, e.stack) } },
+    onProposedApiDenied: (err) => warnPerHunkUnavailable(err && err.message || 'createWebviewTextEditorInset denied'),
   })
   state.statusBar = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Left, 100)
   state.statusBar.command = 'dshReview.listPending'
@@ -215,6 +286,7 @@ function activate(context) {
 
   log('insets (editorInsets proposed API):', state.insets.supported ? 'available' : 'UNAVAILABLE (decoration fallback) — probe: ' + (state.insets.diagnostic || '?'), '\n  extension id: dsn.dsh-review-vscode, argv.json enable-proposed-api set, package.json enabledApiProposals:', JSON.stringify(require('./package.json').enabledApiProposals))
   context.subscriptions.push({ dispose: () => { if (state.insets) state.insets.disposeAll() } })
+  maybeWarnProposedApi(context)
   if (!fs.existsSync(storeDir)) {
     try { fs.mkdirSync(storeDir, { recursive: true }) } catch (e) { log('cannot create store dir:', e.message) }
   }
@@ -442,6 +514,7 @@ function activate(context) {
   context.subscriptions.push(vscode.commands.registerCommand('dshReview.restartDsh', restartDsh))
   context.subscriptions.push(vscode.commands.registerCommand('dshReview.stopDsh', stopDsh))
   context.subscriptions.push(vscode.commands.registerCommand('dshReview.restartDshProxy', restartDshProxy))
+  context.subscriptions.push(vscode.commands.registerCommand('dshReview.enableProposedApi', enableProposedApi))
   context.subscriptions.push(vscode.commands.registerCommand('dshReview.sendSelectionToDsh', async () => {
     const editor = vscode.window.activeTextEditor
     if (!editor || editor.selection.isEmpty) {
