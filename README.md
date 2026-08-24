@@ -14,7 +14,7 @@
 ## 一键安装（同时安装 dsh 和 VS Code）
 
 ```bash
-git clone --recurse-submodules https://github.com/Tlyer233/dsh-vscode-review.git
+git clone --recurse-submodules https://github.com/Wilson-Lai-Ab/dsh-vscode-review.git
 cd dsh-vscode-review
 ./install.sh
 ```
@@ -22,9 +22,15 @@ cd dsh-vscode-review
 Windows PowerShell：
 
 ```powershell
-git clone https://github.com/Tlyer233/dsh-vscode-review.git
+git clone https://github.com/Wilson-Lai-Ab/dsh-vscode-review.git
 cd dsh-vscode-review
 .\install.ps1
+```
+
+只装 dsh 两包（不含 VS Code 扩展）也可以走聚合包，会从本仓库子目录下载：
+
+```bash
+dsh plugin --profile web add git+https://github.com/Wilson-Lai-Ab/dsh-idea-style.git
 ```
 
 脚本会依次：

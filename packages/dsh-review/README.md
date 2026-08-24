@@ -19,7 +19,7 @@ dsh (write/edit) ─▶ review 插件 ─▶ 记录 before/after 快照 ($DSH_HO
 ### 推荐：套件一键安装（同时装 dsh 和 VSCode 插件）
 
 ```sh
-git clone https://github.com/Tlyer233/dsh-vscode-review.git
+git clone https://github.com/Wilson-Lai-Ab/dsh-vscode-review.git
 cd dsh-vscode-review
 ./install.sh          # Windows 用 .\install.ps1
 ```
@@ -27,7 +27,13 @@ cd dsh-vscode-review
 ### 仅安装 dsh-review
 
 ```sh
-dsh plugin --profile web add github:Tlyer233/dsh-vscode-review#dsh-review
+dsh plugin --profile web add git+https://github.com/Wilson-Lai-Ab/dsh-vscode-review.git#path:packages/dsh-review
+```
+
+或随全家桶一起装：
+
+```sh
+dsh plugin --profile web add git+https://github.com/Wilson-Lai-Ab/dsh-idea-style.git
 ```
 
 安装后重启 dsh web 生效。
@@ -35,7 +41,7 @@ dsh plugin --profile web add github:Tlyer233/dsh-vscode-review#dsh-review
 ### 源码目录安装
 
 ```sh
-git clone https://github.com/Tlyer233/dsh-vscode-review.git
+git clone https://github.com/Wilson-Lai-Ab/dsh-vscode-review.git
 cd dsh-vscode-review
 dsh plugin --profile web add ./packages/dsh-review
 ```
