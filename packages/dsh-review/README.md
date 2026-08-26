@@ -30,13 +30,7 @@ cd dsh-vscode-review
 dsh plugin --profile web add git+https://github.com/Wilson-Lai-Ab/dsh-vscode-review.git#path:packages/dsh-review
 ```
 
-或随全家桶一起装：
-
-```sh
-dsh plugin --profile web add git+https://github.com/Wilson-Lai-Ab/dsh-idea-style.git
-```
-
-安装后重启 dsh web 生效。
+本包**不在** `dsh-idea-style` 聚合包内。安装后重启 dsh web 生效。
 
 ### 源码目录安装
 

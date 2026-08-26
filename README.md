@@ -2,7 +2,7 @@
 
 ![vsdp联名.jpg](https://20040424.xyz/PicList/vsdp联名.jpg)
 
-一个仓库装齐 dsh 插件 + VS Code 插件。本工作区副本维护在 [Wilson-Lai-Ab/dsh-vscode-review](https://github.com/Wilson-Lai-Ab/dsh-vscode-review)，上游为 [Tlyer233/dsh-vscode-review](https://github.com/Tlyer233/dsh-vscode-review)。dsh 两包已纳入聚合包 `dsh-idea-style`。
+一个仓库装齐 dsh 插件 + VS Code 插件。本工作区副本维护在 [Wilson-Lai-Ab/dsh-vscode-review](https://github.com/Wilson-Lai-Ab/dsh-vscode-review)，上游为 [Tlyer233/dsh-vscode-review](https://github.com/Tlyer233/dsh-vscode-review)。**不在**聚合包 `dsh-idea-style` 内，需单独安装。
 
 ![PixPin_2026-08-16_23-10-56.png](https://20040424.xyz/PicList/PixPin_2026-08-16_23-10-56.png)
 
@@ -27,13 +27,14 @@ cd dsh-vscode-review
 .\install.ps1
 ```
 
-只装 dsh 两包（不含 VS Code 扩展）也可以走聚合包，会从本仓库子目录下载：
+只装 dsh 两包（不含 VS Code 扩展）：
 
 ```bash
-dsh plugin --profile web add git+https://github.com/Wilson-Lai-Ab/dsh-idea-style.git
+dsh plugin --profile web add git+https://github.com/Wilson-Lai-Ab/dsh-vscode-review.git#path:packages/dsh-review
+dsh plugin --profile web add git+https://github.com/Wilson-Lai-Ab/dsh-vscode-review.git#path:packages/dsh-review-changes
 ```
 
-脚本会依次：
+一键脚本会依次：
 
 1. `dsh plugin --profile web add ./packages/dsh-review`
 2. `dsh plugin --profile web add ./packages/dsh-review-changes`
